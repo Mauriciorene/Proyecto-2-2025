@@ -42,7 +42,7 @@ const Encabezado = () => {
     };
 
     return (
-        <Navbar expand="sm" fixed="top" className="color-navbar">
+        <Navbar expand="md" fixed="top" className="color-navbar">
         <Container>
             <Navbar.Brand onClick={() => handleNavigate("/inicio")} className="text-white" style={{ cursor: "pointer" }}>
             <img alt="" src={logo} width="30" height="30" className="d-inline-block align-top" />{" "}
@@ -94,11 +94,11 @@ const Encabezado = () => {
                 </Nav.Link>
 
                 <Nav.Link
-                    onClick={() => handleNavigate("/catalogo")}
+                    onClick={() => handleNavigate("/catálogo")}
                     className={isCollapsed ? "color-texto-marca" : "text-white"}
                 >
                     {isCollapsed ? <i className="bi-house-door-fill me-2"></i> : null}
-                    <strong>Catalogo</strong>
+                    <strong>Catálogo</strong>
                 </Nav.Link>
 
                     
