@@ -5,7 +5,7 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import Offcanvas from "react-bootstrap/Offcanvas";
 import logo from "../assets/react.svg";
-import { useAuth } from "../database/authcontext.jsx";
+import { useAuth } from "../database/authcontext";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import "../App.css";
 
@@ -42,11 +42,11 @@ const Encabezado = () => {
     };
 
     return (
-        <Navbar expand="md" fixed="top" className="color-navbar">
+        <Navbar expand="sm" fixed="top" className="color-navbar">
         <Container>
             <Navbar.Brand onClick={() => handleNavigate("/inicio")} className="text-white" style={{ cursor: "pointer" }}>
             <img alt="" src={logo} width="30" height="30" className="d-inline-block align-top" />{" "}
-            <strong>Ferreteria</strong>
+            <strong>Oreki Hotaru</strong>
             </Navbar.Brand>
             <Navbar.Toggle aria-controls="offcanvasNavbar-expand-sm" onClick={handleToggle} />
             <Navbar.Offcanvas
@@ -74,14 +74,12 @@ const Encabezado = () => {
                     {isCollapsed ? <i className="bi-house-door-fill me-2"></i> : null}
                     <strong>Inicio</strong>
                 </Nav.Link>
-                {isLoggedIn ? (
-                    <>
 
-                    <Nav.Link
+                <Nav.Link
                     onClick={() => handleNavigate("/productos")}
                     className={isCollapsed ? "color-texto-marca" : "text-white"}
                 >
-                    {isCollapsed ? <i className="bi-house-door-fill me-2"></i> : null}
+                    {isCollapsed ? <i className="bi bi-box-seam-fill me-2"></i> : null}
                     <strong>Productos</strong>
                 </Nav.Link>
 
@@ -89,19 +87,20 @@ const Encabezado = () => {
                     onClick={() => handleNavigate("/categorias")}
                     className={isCollapsed ? "color-texto-marca" : "text-white"}
                 >
-                    {isCollapsed ? <i className="bi-house-door-fill me-2"></i> : null}
+                    {isCollapsed ? <i className="bi bi-card-checklist me-2"></i> : null}
                     <strong>Categorias</strong>
                 </Nav.Link>
 
                 <Nav.Link
-                    onClick={() => handleNavigate("/catálogo")}
+                    onClick={() => handleNavigate("/catalogo")}
                     className={isCollapsed ? "color-texto-marca" : "text-white"}
                 >
-                    {isCollapsed ? <i className="bi-house-door-fill me-2"></i> : null}
+                    {isCollapsed ? <i className="bi bi-book-fill me-2"></i> : null}
                     <strong>Catálogo</strong>
                 </Nav.Link>
 
-                    
+                {isLoggedIn ? (
+                    <>
                     <Nav.Link onClick={handleLogout} className={isCollapsed ? "text-black" : "text-white"}>
                         Cerrar Sesión
                     </Nav.Link>
