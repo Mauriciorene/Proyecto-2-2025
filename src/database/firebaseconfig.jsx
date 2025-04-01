@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage"; // Agrega Firebase Storage
 
 // Configuración de Firebase usando variables de entorno
 const firebaseConfig = {
@@ -13,6 +14,9 @@ const firebaseConfig = {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
+// Inicializa Storage
+const storage = getStorage(appfirebase);
+
 // Inicializa Firebase
 const appfirebase = initializeApp(firebaseConfig);
 
@@ -22,4 +26,4 @@ const db = getFirestore(appfirebase);
 // Inicializa Authentication
 const auth = getAuth(appfirebase);
 
-export { appfirebase, db, auth };
+export { appfirebase, db, auth, storage};
