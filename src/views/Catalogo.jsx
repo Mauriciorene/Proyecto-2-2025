@@ -4,6 +4,7 @@ import { db } from "../database/firebaseconfig";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import TarjetaProducto from "../components/catalogo/TarjetaProducto";
 import ModalEdicionProducto from "../components/productos/ModalEdicionProducto";
+import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";  // Importamos el componente de búsqueda
 
 const Catalogo = () => {
     const [productos, setProductos] = useState([]);
@@ -11,6 +12,7 @@ const Catalogo = () => {
     const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("Todas");
     const [showEditModal, setShowEditModal] = useState(false);
     const [productoEditado, setProductoEditado] = useState(null);
+    const [searchText, setSearchText] = useState("");  // Estado para el texto de búsqueda
 
     const productosCollection = collection(db, "productos");
     const categoriasCollection = collection(db, "categorias");
@@ -76,13 +78,32 @@ const Catalogo = () => {
         }
     };
 
-    const productosFiltrados = categoriaSeleccionada === "Todas"
-        ? productos
-        : productos.filter((producto) => producto.categoria === categoriaSeleccionada);
+    // Filtramos los productos según la categoría y el texto de búsqueda
+    const productosBusqueda = productos.filter((producto) => {
+        const nombre = producto.nombre ? producto.nombre.toLowerCase() : "";
+        const descripcion = producto.descripcion ? producto.descripcion.toLowerCase() : "";
+        const categoria = producto.categoria ? producto.categoria : "";
+    
+        const matchesCategoria = categoriaSeleccionada === "Todas" || categoria === categoriaSeleccionada;
+        const matchesBusqueda = nombre.includes(searchText.toLowerCase()) || descripcion.includes(searchText.toLowerCase());
+    
+        return matchesCategoria && matchesBusqueda;
+    });
+    
+    
+
+    const handleSearchChange = (e) => {
+        setSearchText(e.target.value);  // Actualiza el texto de búsqueda
+    };
 
     return (
         <Container className="mt-5">
             <h4>Catálogo de Productos</h4>
+
+            {/* Agregar el cuadro de búsqueda aquí */}
+            <CuadroBusquedas searchText={searchText} handleSearchChange={handleSearchChange} />
+
+            {/* Filtro por categoría */}
             <Row>
                 <Col lg={3} md={3} sm={6}>
                     <Form.Group className="mb-3">
@@ -102,13 +123,14 @@ const Catalogo = () => {
                 </Col>
             </Row>
 
+            {/* Productos Filtrados por búsqueda y categoría */}
             <Row>
-                {productosFiltrados.length > 0 ? (
-                    productosFiltrados.map((producto) => (
+                {productosBusqueda.length > 0 ? (
+                    productosBusqueda.map((producto) => (
                         <TarjetaProducto key={producto.id} producto={producto} openEditModal={openEditModal} />
                     ))
                 ) : (
-                    <p>No hay productos en esta categoría.</p>
+                    <p>No hay productos que coincidan con la búsqueda.</p>
                 )}
             </Row>
 
