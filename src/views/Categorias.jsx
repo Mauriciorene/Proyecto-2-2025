@@ -9,17 +9,16 @@ import {
     updateDoc,
     deleteDoc,
     doc,
-    } from "firebase/firestore";
+} from "firebase/firestore";
 
-    // Importaciones de componentes personalizados
-    import TablaCategorias from "../components/categorias/TablaCategorias";
-    import ModalRegistroCategoria from "../components/categorias/ModalRegistroCategoria";
-    import ModalEdicionCategoria from "../components/categorias/ModalEdicionCategoria";
-    import ModalEliminacionCategoria from "../components/categorias/ModalEliminacionCategoria";
+// Importaciones de componentes personalizados
+import TablaCategorias from "../components/categorias/TablaCategorias";
+import ModalRegistroCategoria from "../components/categorias/ModalRegistroCategoria";
+import ModalEdicionCategoria from "../components/categorias/ModalEdicionCategoria";
+import ModalEliminacionCategoria from "../components/categorias/ModalEliminacionCategoria";
+import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 
-
-    const Categorias = () => {
-    
+const Categorias = () => {
     // Estados para manejo de datos
     const [categorias, setCategorias] = useState([]);
     const [showModal, setShowModal] = useState(false);
@@ -31,6 +30,8 @@ import {
     });
     const [categoriaEditada, setCategoriaEditada] = useState(null);
     const [categoriaAEliminar, setCategoriaAEliminar] = useState(null);
+    const [categoriasFiltradas, setCategoriasFiltradas] = useState([]); // Corregido
+    const [searchText, setSearchText] = useState("");
 
     // Referencia a la colección de categorías en Firestore
     const categoriasCollection = collection(db, "categorias");
@@ -38,14 +39,15 @@ import {
     // Función para obtener todas las categorías de Firestore
     const fetchCategorias = async () => {
         try {
-        const data = await getDocs(categoriasCollection);
-        const fetchedCategorias = data.docs.map((doc) => ({
-            ...doc.data(),
-            id: doc.id,
-        }));
-        setCategorias(fetchedCategorias);
+            const data = await getDocs(categoriasCollection);
+            const fetchedCategorias = data.docs.map((doc) => ({
+                ...doc.data(),
+                id: doc.id,
+            }));
+            setCategorias(fetchedCategorias);
+            setCategoriasFiltradas(fetchedCategorias); // Corregido
         } catch (error) {
-        console.error("Error al obtener las categorías:", error);
+            console.error("Error al obtener las categorías:", error);
         }
     };
 
@@ -54,12 +56,25 @@ import {
         fetchCategorias();
     }, []);
 
+    // Función para filtrar categorías
+    const handleSearchChange = (e) => {
+        const text = e.target.value.toLowerCase();
+        setSearchText(text);
+
+        const filtradas = categorias.filter((categoria) =>
+            categoria.nombre.toLowerCase().includes(text) ||
+            categoria.descripcion.toLowerCase().includes(text)
+        );
+
+        setCategoriasFiltradas(filtradas);
+    };
+
     // Manejador de cambios en inputs del formulario de nueva categoría
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setNuevaCategoria((prev) => ({
-        ...prev,
-        [name]: value,
+            ...prev,
+            [name]: value,
         }));
     };
 
@@ -67,54 +82,54 @@ import {
     const handleEditInputChange = (e) => {
         const { name, value } = e.target;
         setCategoriaEditada((prev) => ({
-        ...prev,
-        [name]: value,
+            ...prev,
+            [name]: value,
         }));
     };
 
     // Función para agregar una nueva categoría (CREATE)
     const handleAddCategoria = async () => {
         if (!nuevaCategoria.nombre || !nuevaCategoria.descripcion) {
-        alert("Por favor, completa todos los campos antes de guardar.");
-        return;
+            alert("Por favor, completa todos los campos antes de guardar.");
+            return;
         }
         try {
-        await addDoc(categoriasCollection, nuevaCategoria);
-        setShowModal(false);
-        setNuevaCategoria({ nombre: "", descripcion: "" });
-        await fetchCategorias();
+            await addDoc(categoriasCollection, nuevaCategoria);
+            setShowModal(false);
+            setNuevaCategoria({ nombre: "", descripcion: "" });
+            await fetchCategorias();
         } catch (error) {
-        console.error("Error al agregar la categoría:", error);
+            console.error("Error al agregar la categoría:", error);
         }
     };
 
     // Función para actualizar una categoría existente (UPDATE)
     const handleEditCategoria = async () => {
-        if (!categoriaEditada.nombre || !categoriaEditada.descripcion) {
-        alert("Por favor, completa todos los campos antes de actualizar.");
-        return;
+        if (!categoriaEditada?.nombre || !categoriaEditada?.descripcion) {
+            alert("Por favor, completa todos los campos antes de actualizar.");
+            return;
         }
         try {
-        const categoriaRef = doc(db, "categorias", categoriaEditada.id);
-        await updateDoc(categoriaRef, categoriaEditada);
-        setShowEditModal(false);
-        await fetchCategorias();
+            const categoriaRef = doc(db, "categorias", categoriaEditada.id);
+            await updateDoc(categoriaRef, categoriaEditada);
+            setShowEditModal(false);
+            await fetchCategorias();
         } catch (error) {
-        console.error("Error al actualizar la categoría:", error);
+            console.error("Error al actualizar la categoría:", error);
         }
     };
 
     // Función para eliminar una categoría (DELETE)
     const handleDeleteCategoria = async () => {
         if (categoriaAEliminar) {
-        try {
-            const categoriaRef = doc(db, "categorias", categoriaAEliminar.id);
-            await deleteDoc(categoriaRef);
-            setShowDeleteModal(false);
-            await fetchCategorias();
-        } catch (error) {
-            console.error("Error al eliminar la categoría:", error);
-        }
+            try {
+                const categoriaRef = doc(db, "categorias", categoriaAEliminar.id);
+                await deleteDoc(categoriaRef);
+                setShowDeleteModal(false);
+                await fetchCategorias();
+            } catch (error) {
+                console.error("Error al eliminar la categoría:", error);
+            }
         }
     };
 
@@ -133,35 +148,42 @@ import {
     // Renderizado del componente
     return (
         <Container className="mt-5">
-        <br />
-        <h4>Gestión de Categorías</h4>
-        <Button className="mb-3" onClick={() => setShowModal(true)}>
-            Agregar categoría
-        </Button>
-        <TablaCategorias
-            categorias={categorias}
-            openEditModal={openEditModal}
-            openDeleteModal={openDeleteModal}
-        />
-        <ModalRegistroCategoria
-            showModal={showModal}
-            setShowModal={setShowModal}
-            nuevaCategoria={nuevaCategoria}
-            handleInputChange={handleInputChange}
-            handleAddCategoria={handleAddCategoria}
-        />
-        <ModalEdicionCategoria
-            showEditModal={showEditModal}
-            setShowEditModal={setShowEditModal}
-            categoriaEditada={categoriaEditada}
-            handleEditInputChange={handleEditInputChange}
-            handleEditCategoria={handleEditCategoria}
-        />
-        <ModalEliminacionCategoria
-            showDeleteModal={showDeleteModal}
-            setShowDeleteModal={setShowDeleteModal}
-            handleDeleteCategoria={handleDeleteCategoria}
-        />
+            <br />
+            <h4>Gestión de Categorías</h4>
+            <Button className="mb-3" onClick={() => setShowModal(true)}>
+                Agregar categoría
+            </Button>
+
+            <CuadroBusquedas
+                searchText={searchText} 
+                handleSearchChange={handleSearchChange}
+            />
+
+            <TablaCategorias
+                categorias={categoriasFiltradas}
+                openEditModal={openEditModal}
+                openDeleteModal={openDeleteModal}
+            />
+
+            <ModalRegistroCategoria
+                showModal={showModal}
+                setShowModal={setShowModal}
+                nuevaCategoria={nuevaCategoria}
+                handleInputChange={handleInputChange}
+                handleAddCategoria={handleAddCategoria}
+            />
+            <ModalEdicionCategoria
+                showEditModal={showEditModal}
+                setShowEditModal={setShowEditModal}
+                categoriaEditada={categoriaEditada}
+                handleEditInputChange={handleEditInputChange}
+                handleEditCategoria={handleEditCategoria}
+            />
+            <ModalEliminacionCategoria
+                showDeleteModal={showDeleteModal}
+                setShowDeleteModal={setShowDeleteModal}
+                handleDeleteCategoria={handleDeleteCategoria}
+            />
         </Container>
     );
 };
