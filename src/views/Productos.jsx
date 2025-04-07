@@ -9,11 +9,13 @@ import {
     deleteDoc,
     doc,
 } from "firebase/firestore";
+
 import TablaProductos from "../components/productos/TablaProductos";
 import ModalRegistroProducto from "../components/productos/ModalRegistroProducto";
 import ModalEdicionProducto from "../components/productos/ModalEdicionProducto";
 import ModalEliminacionProducto from "../components/productos/ModalEliminacionProducto";
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
+import Paginacion from "../components/ordenamiento/Paginacion";
 
 const Productos = () => {
     // Estados para manejo de datos
@@ -28,6 +30,11 @@ const Productos = () => {
         categoria: "",
         imagen: ""
     });
+    
+    //Paginacion
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5; // Número de productos por página
+
     const [productoEditado, setProductoEditado] = useState(null);
     const [productoAEliminar, setProductoAEliminar] = useState(null);
     const [productosFiltrados, setProductosFiltrados] = useState([]); // Corregido
@@ -175,6 +182,12 @@ const Productos = () => {
         setShowDeleteModal(true);
     };
 
+    // Calcular productos paginados
+    const paginatedProductos = productosFiltrados.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     // Renderizado del componente
     return (
         <Container className="mt-5">
@@ -190,9 +203,13 @@ const Productos = () => {
             />
 
             <TablaProductos
-                productos={productosFiltrados}
                 openEditModal={openEditModal}
                 openDeleteModal={openDeleteModal}
+                productos={paginatedProductos} // Pasar productos paginados
+                totalItems={productos.length} // Total de productos
+                itemsPerPage={itemsPerPage}   // Elementos por página
+                currentPage={currentPage}     // Página actual
+                setCurrentPage={setCurrentPage} // Método para cambiar página
             />
             
             <ModalRegistroProducto
@@ -218,6 +235,14 @@ const Productos = () => {
                 setShowDeleteModal={setShowDeleteModal}
                 handleDeleteProducto={handleDeleteProducto}
             />
+
+            <Paginacion
+                itemsPerPage={itemsPerPage}
+                totalItems={productosFiltrados.length}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+            />
+
         </Container>
     );
 };
