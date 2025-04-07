@@ -17,26 +17,31 @@ import ModalRegistroCategoria from "../components/categorias/ModalRegistroCatego
 import ModalEdicionCategoria from "../components/categorias/ModalEdicionCategoria";
 import ModalEliminacionCategoria from "../components/categorias/ModalEliminacionCategoria";
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
+import Paginacion from "../components/ordenamiento/Paginacion";
 
 const Categorias = () => {
-    // Estados para manejo de datos
+    // Estados
     const [categorias, setCategorias] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [nuevaCategoria, setNuevaCategoria] = useState({
-        nombre: "",
-        descripcion: "",
-    });
+    const [nuevaCategoria, setNuevaCategoria] = useState({ nombre: "", descripcion: "" });
     const [categoriaEditada, setCategoriaEditada] = useState(null);
     const [categoriaAEliminar, setCategoriaAEliminar] = useState(null);
-    const [categoriasFiltradas, setCategoriasFiltradas] = useState([]); // Corregido
+    const [categoriasFiltradas, setCategoriasFiltradas] = useState([]);
     const [searchText, setSearchText] = useState("");
 
-    // Referencia a la colección de categorías en Firestore
+    // Paginación
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = categoriasFiltradas.slice(indexOfFirstItem, indexOfLastItem);
+
+    // Firestore
     const categoriasCollection = collection(db, "categorias");
 
-    // Función para obtener todas las categorías de Firestore
+    // Obtener categorías
     const fetchCategorias = async () => {
         try {
             const data = await getDocs(categoriasCollection);
@@ -45,31 +50,27 @@ const Categorias = () => {
                 id: doc.id,
             }));
             setCategorias(fetchedCategorias);
-            setCategoriasFiltradas(fetchedCategorias); // Corregido
+            setCategoriasFiltradas(fetchedCategorias);
         } catch (error) {
             console.error("Error al obtener las categorías:", error);
         }
     };
 
-    // Hook useEffect para carga inicial de datos
     useEffect(() => {
         fetchCategorias();
     }, []);
 
-    // Función para filtrar categorías
     const handleSearchChange = (e) => {
         const text = e.target.value.toLowerCase();
         setSearchText(text);
-
         const filtradas = categorias.filter((categoria) =>
             categoria.nombre.toLowerCase().includes(text) ||
             categoria.descripcion.toLowerCase().includes(text)
         );
-
         setCategoriasFiltradas(filtradas);
+        setCurrentPage(1); // Reiniciar a la primera página al filtrar
     };
 
-    // Manejador de cambios en inputs del formulario de nueva categoría
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setNuevaCategoria((prev) => ({
@@ -78,7 +79,6 @@ const Categorias = () => {
         }));
     };
 
-    // Manejador de cambios en inputs del formulario de edición
     const handleEditInputChange = (e) => {
         const { name, value } = e.target;
         setCategoriaEditada((prev) => ({
@@ -87,7 +87,6 @@ const Categorias = () => {
         }));
     };
 
-    // Función para agregar una nueva categoría (CREATE)
     const handleAddCategoria = async () => {
         if (!nuevaCategoria.nombre || !nuevaCategoria.descripcion) {
             alert("Por favor, completa todos los campos antes de guardar.");
@@ -103,7 +102,6 @@ const Categorias = () => {
         }
     };
 
-    // Función para actualizar una categoría existente (UPDATE)
     const handleEditCategoria = async () => {
         if (!categoriaEditada?.nombre || !categoriaEditada?.descripcion) {
             alert("Por favor, completa todos los campos antes de actualizar.");
@@ -119,7 +117,6 @@ const Categorias = () => {
         }
     };
 
-    // Función para eliminar una categoría (DELETE)
     const handleDeleteCategoria = async () => {
         if (categoriaAEliminar) {
             try {
@@ -133,19 +130,17 @@ const Categorias = () => {
         }
     };
 
-    // Función para abrir el modal de edición con datos prellenados
     const openEditModal = (categoria) => {
         setCategoriaEditada({ ...categoria });
         setShowEditModal(true);
     };
 
-    // Función para abrir el modal de eliminación
     const openDeleteModal = (categoria) => {
         setCategoriaAEliminar(categoria);
         setShowDeleteModal(true);
     };
 
-    // Renderizado del componente
+    // Render
     return (
         <Container className="mt-5">
             <br />
@@ -155,14 +150,21 @@ const Categorias = () => {
             </Button>
 
             <CuadroBusquedas
-                searchText={searchText} 
+                searchText={searchText}
                 handleSearchChange={handleSearchChange}
             />
 
             <TablaCategorias
-                categorias={categoriasFiltradas}
+                categorias={currentItems}
                 openEditModal={openEditModal}
                 openDeleteModal={openDeleteModal}
+            />
+
+            <Paginacion
+                itemsPerPage={itemsPerPage}
+                totalItems={categoriasFiltradas.length}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
             />
 
             <ModalRegistroCategoria
@@ -172,6 +174,7 @@ const Categorias = () => {
                 handleInputChange={handleInputChange}
                 handleAddCategoria={handleAddCategoria}
             />
+
             <ModalEdicionCategoria
                 showEditModal={showEditModal}
                 setShowEditModal={setShowEditModal}
@@ -179,6 +182,7 @@ const Categorias = () => {
                 handleEditInputChange={handleEditInputChange}
                 handleEditCategoria={handleEditCategoria}
             />
+
             <ModalEliminacionCategoria
                 showDeleteModal={showDeleteModal}
                 setShowDeleteModal={setShowDeleteModal}

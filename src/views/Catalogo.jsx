@@ -4,7 +4,8 @@ import { db } from "../database/firebaseconfig";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
 import TarjetaProducto from "../components/catalogo/TarjetaProducto";
 import ModalEdicionProducto from "../components/productos/ModalEdicionProducto";
-import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";  // Importamos el componente de búsqueda
+import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
+import Paginacion from "../components/ordenamiento/Paginacion";
 
 const Catalogo = () => {
     const [productos, setProductos] = useState([]);
@@ -12,7 +13,11 @@ const Catalogo = () => {
     const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("Todas");
     const [showEditModal, setShowEditModal] = useState(false);
     const [productoEditado, setProductoEditado] = useState(null);
-    const [searchText, setSearchText] = useState("");  // Estado para el texto de búsqueda
+    const [searchText, setSearchText] = useState("");
+
+    // Estados de paginación
+    const [paginaActual, setPaginaActual] = useState(1);
+    const productosPorPagina = 6;
 
     const productosCollection = collection(db, "productos");
     const categoriasCollection = collection(db, "categorias");
@@ -78,29 +83,41 @@ const Catalogo = () => {
         }
     };
 
-    // Filtramos los productos según la categoría y el texto de búsqueda
+    // Filtrar productos por categoría y búsqueda
     const productosBusqueda = productos.filter((producto) => {
         const nombre = producto.nombre ? producto.nombre.toLowerCase() : "";
         const descripcion = producto.descripcion ? producto.descripcion.toLowerCase() : "";
         const categoria = producto.categoria ? producto.categoria : "";
-    
+
         const matchesCategoria = categoriaSeleccionada === "Todas" || categoria === categoriaSeleccionada;
         const matchesBusqueda = nombre.includes(searchText.toLowerCase()) || descripcion.includes(searchText.toLowerCase());
-    
+
         return matchesCategoria && matchesBusqueda;
     });
-    
-    
+
+    // Reiniciar a página 1 si cambian búsqueda o categoría
+    useEffect(() => {
+        setPaginaActual(1);
+    }, [searchText, categoriaSeleccionada]);
+
+    // Lógica de paginación
+    const indiceUltimoProducto = paginaActual * productosPorPagina;
+    const indicePrimerProducto = indiceUltimoProducto - productosPorPagina;
+    const productosPaginados = productosBusqueda.slice(indicePrimerProducto, indiceUltimoProducto);
+
+    const cambiarPagina = (numeroPagina) => {
+        setPaginaActual(numeroPagina);
+    };
 
     const handleSearchChange = (e) => {
-        setSearchText(e.target.value);  // Actualiza el texto de búsqueda
+        setSearchText(e.target.value);
     };
 
     return (
         <Container className="mt-5">
             <h4>Catálogo de Productos</h4>
 
-            {/* Agregar el cuadro de búsqueda aquí */}
+            {/* Cuadro de búsqueda */}
             <CuadroBusquedas searchText={searchText} handleSearchChange={handleSearchChange} />
 
             {/* Filtro por categoría */}
@@ -123,10 +140,10 @@ const Catalogo = () => {
                 </Col>
             </Row>
 
-            {/* Productos Filtrados por búsqueda y categoría */}
+            {/* Productos paginados */}
             <Row>
-                {productosBusqueda.length > 0 ? (
-                    productosBusqueda.map((producto) => (
+                {productosPaginados.length > 0 ? (
+                    productosPaginados.map((producto) => (
                         <TarjetaProducto key={producto.id} producto={producto} openEditModal={openEditModal} />
                     ))
                 ) : (
@@ -134,14 +151,23 @@ const Catalogo = () => {
                 )}
             </Row>
 
-            <ModalEdicionProducto 
-                showEditModal={showEditModal} 
-                setShowEditModal={setShowEditModal} 
-                productoEditado={productoEditado} 
-                handleEditInputChange={handleEditInputChange} 
-                handleEditImageChange={handleEditImageChange} 
-                handleEditProducto={handleEditProducto} 
-                categorias={categorias} 
+            {/* Componente de paginación */}
+            <Paginacion
+                productosPorPagina={productosPorPagina}
+                totalProductos={productosBusqueda.length}
+                paginaActual={paginaActual}
+                cambiarPagina={cambiarPagina}
+            />
+
+            {/* Modal de edición */}
+            <ModalEdicionProducto
+                showEditModal={showEditModal}
+                setShowEditModal={setShowEditModal}
+                productoEditado={productoEditado}
+                handleEditInputChange={handleEditInputChange}
+                handleEditImageChange={handleEditImageChange}
+                handleEditProducto={handleEditProducto}
+                categorias={categorias}
             />
         </Container>
     );
