@@ -1,17 +1,15 @@
-// Importaciones
 import React, { useState, useEffect } from "react";
 import { Container, Button } from "react-bootstrap";
 import { db } from "../database/firebaseconfig";
 import {
     collection,
-    getDocs,
     addDoc,
     updateDoc,
     deleteDoc,
     doc,
+    onSnapshot,
 } from "firebase/firestore";
 
-// Importaciones de componentes personalizados
 import TablaCategorias from "../components/categorias/TablaCategorias";
 import ModalRegistroCategoria from "../components/categorias/ModalRegistroCategoria";
 import ModalEdicionCategoria from "../components/categorias/ModalEdicionCategoria";
@@ -20,7 +18,6 @@ import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import Paginacion from "../components/ordenamiento/Paginacion";
 
 const Categorias = () => {
-    // Estados
     const [categorias, setCategorias] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -31,44 +28,55 @@ const Categorias = () => {
     const [categoriasFiltradas, setCategoriasFiltradas] = useState([]);
     const [searchText, setSearchText] = useState("");
 
-    // Paginación
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = categoriasFiltradas.slice(indexOfFirstItem, indexOfLastItem);
+    const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
-    // Firestore
     const categoriasCollection = collection(db, "categorias");
 
-    // Obtener categorías
-    const fetchCategorias = async () => {
-        try {
-            const data = await getDocs(categoriasCollection);
-            const fetchedCategorias = data.docs.map((doc) => ({
+    // Control de conexión
+    useEffect(() => {
+        const handleOnline = () => setIsOffline(false);
+        const handleOffline = () => setIsOffline(true);
+
+        window.addEventListener("online", handleOnline);
+        window.addEventListener("offline", handleOffline);
+
+        return () => {
+            window.removeEventListener("online", handleOnline);
+            window.removeEventListener("offline", handleOffline);
+        };
+    }, []);
+
+    // Escuchar categorías en tiempo real
+    useEffect(() => {
+        const unsubscribe = onSnapshot(categoriasCollection, (snapshot) => {
+            const fetched = snapshot.docs.map((doc) => ({
                 ...doc.data(),
                 id: doc.id,
             }));
-            setCategorias(fetchedCategorias);
-            setCategoriasFiltradas(fetchedCategorias);
-        } catch (error) {
-            console.error("Error al obtener las categorías:", error);
-        }
+            setCategorias(fetched);
+            setCategoriasFiltradas(filtrarCategorias(searchText, fetched));
+
+            if (isOffline) console.log("Datos de categorías obtenidos desde caché.");
+        });
+
+        return () => unsubscribe();
+    }, [searchText, isOffline]);
+
+    const filtrarCategorias = (texto, lista) => {
+        const txt = texto.toLowerCase();
+        return lista.filter((cat) =>
+            cat.nombre.toLowerCase().includes(txt) ||
+            cat.descripcion.toLowerCase().includes(txt)
+        );
     };
 
-    useEffect(() => {
-        fetchCategorias();
-    }, []);
-
     const handleSearchChange = (e) => {
-        const text = e.target.value.toLowerCase();
+        const text = e.target.value;
         setSearchText(text);
-        const filtradas = categorias.filter((categoria) =>
-            categoria.nombre.toLowerCase().includes(text) ||
-            categoria.descripcion.toLowerCase().includes(text)
-        );
-        setCategoriasFiltradas(filtradas);
-        setCurrentPage(1); // Reiniciar a la primera página al filtrar
+        setCategoriasFiltradas(filtrarCategorias(text, categorias));
+        setCurrentPage(1);
     };
 
     const handleInputChange = (e) => {
@@ -96,7 +104,6 @@ const Categorias = () => {
             await addDoc(categoriasCollection, nuevaCategoria);
             setShowModal(false);
             setNuevaCategoria({ nombre: "", descripcion: "" });
-            await fetchCategorias();
         } catch (error) {
             console.error("Error al agregar la categoría:", error);
         }
@@ -111,7 +118,6 @@ const Categorias = () => {
             const categoriaRef = doc(db, "categorias", categoriaEditada.id);
             await updateDoc(categoriaRef, categoriaEditada);
             setShowEditModal(false);
-            await fetchCategorias();
         } catch (error) {
             console.error("Error al actualizar la categoría:", error);
         }
@@ -123,7 +129,6 @@ const Categorias = () => {
                 const categoriaRef = doc(db, "categorias", categoriaAEliminar.id);
                 await deleteDoc(categoriaRef);
                 setShowDeleteModal(false);
-                await fetchCategorias();
             } catch (error) {
                 console.error("Error al eliminar la categoría:", error);
             }
@@ -140,7 +145,11 @@ const Categorias = () => {
         setShowDeleteModal(true);
     };
 
-    // Render
+    const currentItems = categoriasFiltradas.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
     return (
         <Container className="mt-5">
             <br />
