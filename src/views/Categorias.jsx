@@ -95,20 +95,57 @@ const Categorias = () => {
         }));
     };
 
+    // PersistenciaOffline_Categorias (Add)
+
+    // Función para agregar una nueva categoría (CREATE)
     const handleAddCategoria = async () => {
+        // Validar campos requeridos
         if (!nuevaCategoria.nombre || !nuevaCategoria.descripcion) {
-            alert("Por favor, completa todos los campos antes de guardar.");
-            return;
+        alert("Por favor, completa todos los campos antes de guardar.");
+        return;
         }
+
+        // Cerrar modal
+        setShowModal(false);
+    
+        // Crear ID temporal para offline y objeto de categoría
+        const tempId = `temp_${Date.now()}`;
+        const categoriaConId = { ...nuevaCategoria, id: tempId };
+    
         try {
-            await addDoc(categoriasCollection, nuevaCategoria);
-            setShowModal(false);
-            setNuevaCategoria({ nombre: "", descripcion: "" });
+        // Actualizar estado local para reflejar la nueva categoría
+        setCategorias((prev) => [...prev, categoriaConId]);
+        setCategoriasFiltradas((prev) => [...prev, categoriaConId]);
+
+        // Limpiar campos del formulario
+        setNuevaCategoria({ nombre: "", descripcion: "" });
+    
+        // Intentar guardar en Firestore
+        await addDoc(categoriasCollection, nuevaCategoria);
+    
+        // Mensaje según estado de conexión
+        if (isOffline) {
+            console.log("Categoría agregada localmente (sin conexión).");
+        } else {
+            console.log("Categoría agregada exitosamente en la nube.");
+        }
         } catch (error) {
-            console.error("Error al agregar la categoría:", error);
+        console.error("Error al agregar la categoría:", error);
+    
+        // Manejar error según estado de conexión
+        if (isOffline) {
+            console.log("Offline: Categoría almacenada localmente.");
+        } else {
+            // Revertir cambios locales si falla en la nube
+            setCategorias((prev) => prev.filter((cat) => cat.id !== tempId));
+            setCategoriasFiltradas((prev) => prev.filter((cat) => cat.id !== tempId));
+            alert("Error al agregar la categoría: " + error.message);
+        }
         }
     };
 
+    //
+    
     const handleEditCategoria = async () => {
         if (!categoriaEditada?.nombre || !categoriaEditada?.descripcion) {
             alert("Por favor, completa todos los campos antes de actualizar.");
@@ -123,17 +160,44 @@ const Categorias = () => {
         }
     };
 
-    const handleDeleteCategoria = async () => {
-        if (categoriaAEliminar) {
+    //PersistenciaOffline_Categorias (Delete)
+
+        const handleDeleteCategoria = async () => {
+            if (!categoriaAEliminar) return;
+        
+            // Cerrar modal
+            setShowDeleteModal(false);
+        
             try {
-                const categoriaRef = doc(db, "categorias", categoriaAEliminar.id);
-                await deleteDoc(categoriaRef);
-                setShowDeleteModal(false);
-            } catch (error) {
-                console.error("Error al eliminar la categoría:", error);
+            // Actualizar estado local para reflejar la eliminación
+            setCategorias((prev) => prev.filter((cat) => cat.id !== categoriaAEliminar.id));
+            setCategoriasFiltradas((prev) => prev.filter((cat) => cat.id !== categoriaAEliminar.id));
+        
+            // Intentar eliminar en Firestore
+            const categoriaRef = doc(db, "categorias", categoriaAEliminar.id);
+            await deleteDoc(categoriaRef);
+        
+            // Mensaje según estado de conexión
+            if (isOffline) {
+                console.log("Categoría eliminada localmente (sin conexión).");
+            } else {
+                console.log("Categoría eliminada exitosamente en la nube.");
             }
-        }
-    };
+            } catch (error) {
+            console.error("Error al eliminar la categoría:", error);
+        
+            // Manejar error según estado de conexión
+            if (isOffline) {
+                console.log("Offline: Eliminación almacenada localmente.");
+            } else {
+                // Restaurar categoría en estado local si falla en la nube
+                setCategorias((prev) => [...prev, categoriaAEliminar]);
+                setCategoriasFiltradas((prev) => [...prev, categoriaAEliminar]);
+                alert("Error al eliminar la categoría: " + error.message);
+            }
+            }
+        };
+    //
 
     const openEditModal = (categoria) => {
         setCategoriaEditada({ ...categoria });
