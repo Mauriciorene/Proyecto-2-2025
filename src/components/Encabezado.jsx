@@ -45,7 +45,7 @@ const Encabezado = () => {
         <Container>
             <Navbar.Brand onClick={() => handleNavigate("/inicio")} className="text-white" style={{ cursor: "pointer" }}>
             <img alt="Logo" src="/icons/icon-512x512.png" width="30" height="30" className="d-inline-block align-top" />{" "}
-            <strong>Ferretería</strong>
+            <strong>Ferretería Luna</strong>
             </Navbar.Brand>
             <Navbar.Toggle aria-controls="offcanvasNavbar-expand-sm" onClick={handleToggle} />
             <Navbar.Offcanvas
@@ -113,6 +113,15 @@ const Encabezado = () => {
                     >
                     {isCollapsed ? <i className="bi-cloud-sun-fill me-2"></i> : null}
                     <strong>Clima</strong>
+
+                </Nav.Link>
+
+                <Nav.Link
+                    onClick={() => handleNavigate("/pronunciacion")}
+                    className={isCollapsed ? "color-texto-marca" : "text-white"}
+                    >
+                    {isCollapsed ? <i className="bi-cloud-sun-fill me-2"></i> : null}
+                    <strong>Pronunciación</strong>
 
                 </Nav.Link>
 
