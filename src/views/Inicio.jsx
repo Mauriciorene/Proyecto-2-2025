@@ -82,9 +82,13 @@ const Inicio = () => {
             <Button className="me-2" onClick={() => handleNavigate("/Libros")}>
             Ir a Libros
             </Button>
+            <Button className="me-2" onClick={() => handleNavigate("/Estadisticas")}>
+            Ir a Estadisticas
+            </Button>
             <Button onClick={() => handleNavigate("/Pronunciacion")}>
             Ir a Pronunciación
             </Button>
+            
 
             {/* Botón para instalar dependiendo del dispositivo */}
             <br/>
