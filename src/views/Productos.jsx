@@ -179,6 +179,20 @@ const Productos = () => {
         currentPage * itemsPerPage
     );
 
+    // Metodo para copiar datos al portapapeles
+    const handleCopy = (producto) => {
+    const rowData = `Nombre: ${producto.nombre} \nPrecio: C$${producto.precio} \nCategoría: ${producto.categoria}`;
+
+    navigator.clipboard
+        .writeText(rowData)
+        .then(() => {
+            console.log("Datos de la fila copiados al portapapeles:\n" + rowData);
+        })
+        .catch((err) => {
+            console.error("Error al copiar al portapapeles:", err);
+        });
+    };
+
     return (
         <Container className="mt-5">
             <br />
@@ -200,6 +214,7 @@ const Productos = () => {
                 itemsPerPage={itemsPerPage}
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
+                handleCopy={handleCopy}
             />
 
             <ModalRegistroProducto

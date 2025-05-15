@@ -2,7 +2,7 @@ import React from "react";
 import { Table, Button } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-const TablaCategorias = ({ categorias, openEditModal, openDeleteModal }) => {
+const TablaCategorias = ({ categorias, openEditModal, openDeleteModal, handleCopy }) => {
     return (
         <Table striped bordered hover responsive>
         <thead>
@@ -29,9 +29,19 @@ const TablaCategorias = ({ categorias, openEditModal, openDeleteModal }) => {
                 <Button
                     variant="outline-danger"
                     size="sm"
+                    className="me-2"
                     onClick={() => openDeleteModal(categoria)}
                 >
                     <i className="bi bi-trash"></i>
+                </Button>
+                
+                    <Button
+                    variant="outline-info"
+                    size="sm"
+                    onClick={() => handleCopy(categoria)}
+                    title="Copiar datos"
+                >
+                    <i className="bi bi-clipboard"></i>
                 </Button>
                 </td>
             </tr>

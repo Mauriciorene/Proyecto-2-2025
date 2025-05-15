@@ -214,6 +214,17 @@ const Categorias = () => {
         currentPage * itemsPerPage
     );
 
+    // Metodo para copiar datos al portapapeles
+    const handleCopy = (categoria) => {
+    const rowData = `Nombre: ${categoria.nombre} \nDescripción: ${categoria.descripcion}`;
+
+    navigator.clipboard
+        .writeText(rowData)
+        .catch((err) => {
+            console.error("Error al copiar al portapapeles:", err);
+        });
+};
+
     return (
         <Container className="mt-5">
             <br />
@@ -231,6 +242,7 @@ const Categorias = () => {
                 categorias={currentItems}
                 openEditModal={openEditModal}
                 openDeleteModal={openDeleteModal}
+                handleCopy={handleCopy}
             />
 
             <Paginacion
