@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Container, Button } from "react-bootstrap";
+import { Container, Row, Col, Button } from "react-bootstrap";
 import { db } from "../database/firebaseconfig";
-import {
-    collection,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    doc,
-    onSnapshot,
-} from "firebase/firestore";
+import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, } from "firebase/firestore";
 
 import TablaCategorias from "../components/categorias/TablaCategorias";
 import ModalRegistroCategoria from "../components/categorias/ModalRegistroCategoria";
@@ -16,6 +9,7 @@ import ModalEdicionCategoria from "../components/categorias/ModalEdicionCategori
 import ModalEliminacionCategoria from "../components/categorias/ModalEliminacionCategoria";
 import CuadroBusquedas from "../components/busquedas/CuadroBusquedas";
 import Paginacion from "../components/ordenamiento/Paginacion";
+import ChatIA from "../components/chat/ChatIA"; // <-- Importación del componente
 
 const Categorias = () => {
     const [categorias, setCategorias] = useState([]);
@@ -27,14 +21,13 @@ const Categorias = () => {
     const [categoriaAEliminar, setCategoriaAEliminar] = useState(null);
     const [categoriasFiltradas, setCategoriasFiltradas] = useState([]);
     const [searchText, setSearchText] = useState("");
-
+    const [showChatModal, setShowChatModal] = useState(false); // <-- Estado para el modal del chat
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 5;
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
     const categoriasCollection = collection(db, "categorias");
 
-    // Control de conexión
     useEffect(() => {
         const handleOnline = () => setIsOffline(false);
         const handleOffline = () => setIsOffline(true);
@@ -48,7 +41,6 @@ const Categorias = () => {
         };
     }, []);
 
-    // Escuchar categorías en tiempo real
     useEffect(() => {
         const unsubscribe = onSnapshot(categoriasCollection, (snapshot) => {
             const fetched = snapshot.docs.map((doc) => ({
@@ -95,57 +87,41 @@ const Categorias = () => {
         }));
     };
 
-    // PersistenciaOffline_Categorias (Add)
-
-    // Función para agregar una nueva categoría (CREATE)
     const handleAddCategoria = async () => {
-        // Validar campos requeridos
         if (!nuevaCategoria.nombre || !nuevaCategoria.descripcion) {
-        alert("Por favor, completa todos los campos antes de guardar.");
-        return;
+            alert("Por favor, completa todos los campos antes de guardar.");
+            return;
         }
 
-        // Cerrar modal
         setShowModal(false);
-    
-        // Crear ID temporal para offline y objeto de categoría
+
         const tempId = `temp_${Date.now()}`;
         const categoriaConId = { ...nuevaCategoria, id: tempId };
-    
-        try {
-        // Actualizar estado local para reflejar la nueva categoría
-        setCategorias((prev) => [...prev, categoriaConId]);
-        setCategoriasFiltradas((prev) => [...prev, categoriaConId]);
 
-        // Limpiar campos del formulario
-        setNuevaCategoria({ nombre: "", descripcion: "" });
-    
-        // Intentar guardar en Firestore
-        await addDoc(categoriasCollection, nuevaCategoria);
-    
-        // Mensaje según estado de conexión
-        if (isOffline) {
-            console.log("Categoría agregada localmente (sin conexión).");
-        } else {
-            console.log("Categoría agregada exitosamente en la nube.");
-        }
+        try {
+            setCategorias((prev) => [...prev, categoriaConId]);
+            setCategoriasFiltradas((prev) => [...prev, categoriaConId]);
+            setNuevaCategoria({ nombre: "", descripcion: "" });
+
+            await addDoc(categoriasCollection, nuevaCategoria);
+
+            if (isOffline) {
+                console.log("Categoría agregada localmente (sin conexión).");
+            } else {
+                console.log("Categoría agregada exitosamente en la nube.");
+            }
         } catch (error) {
-        console.error("Error al agregar la categoría:", error);
-    
-        // Manejar error según estado de conexión
-        if (isOffline) {
-            console.log("Offline: Categoría almacenada localmente.");
-        } else {
-            // Revertir cambios locales si falla en la nube
-            setCategorias((prev) => prev.filter((cat) => cat.id !== tempId));
-            setCategoriasFiltradas((prev) => prev.filter((cat) => cat.id !== tempId));
-            alert("Error al agregar la categoría: " + error.message);
-        }
+            console.error("Error al agregar la categoría:", error);
+            if (isOffline) {
+                console.log("Offline: Categoría almacenada localmente.");
+            } else {
+                setCategorias((prev) => prev.filter((cat) => cat.id !== tempId));
+                setCategoriasFiltradas((prev) => prev.filter((cat) => cat.id !== tempId));
+                alert("Error al agregar la categoría: " + error.message);
+            }
         }
     };
 
-    //
-    
     const handleEditCategoria = async () => {
         if (!categoriaEditada?.nombre || !categoriaEditada?.descripcion) {
             alert("Por favor, completa todos los campos antes de actualizar.");
@@ -160,44 +136,35 @@ const Categorias = () => {
         }
     };
 
-    //PersistenciaOffline_Categorias (Delete)
+    const handleDeleteCategoria = async () => {
+        if (!categoriaAEliminar) return;
 
-        const handleDeleteCategoria = async () => {
-            if (!categoriaAEliminar) return;
-        
-            // Cerrar modal
-            setShowDeleteModal(false);
-        
-            try {
-            // Actualizar estado local para reflejar la eliminación
+        setShowDeleteModal(false);
+
+        try {
             setCategorias((prev) => prev.filter((cat) => cat.id !== categoriaAEliminar.id));
             setCategoriasFiltradas((prev) => prev.filter((cat) => cat.id !== categoriaAEliminar.id));
-        
-            // Intentar eliminar en Firestore
+
             const categoriaRef = doc(db, "categorias", categoriaAEliminar.id);
             await deleteDoc(categoriaRef);
-        
-            // Mensaje según estado de conexión
+
             if (isOffline) {
                 console.log("Categoría eliminada localmente (sin conexión).");
             } else {
                 console.log("Categoría eliminada exitosamente en la nube.");
             }
-            } catch (error) {
+        } catch (error) {
             console.error("Error al eliminar la categoría:", error);
-        
-            // Manejar error según estado de conexión
+
             if (isOffline) {
                 console.log("Offline: Eliminación almacenada localmente.");
             } else {
-                // Restaurar categoría en estado local si falla en la nube
                 setCategorias((prev) => [...prev, categoriaAEliminar]);
                 setCategoriasFiltradas((prev) => [...prev, categoriaAEliminar]);
                 alert("Error al eliminar la categoría: " + error.message);
             }
-            }
-        };
-    //
+        }
+    };
 
     const openEditModal = (categoria) => {
         setCategoriaEditada({ ...categoria });
@@ -214,24 +181,30 @@ const Categorias = () => {
         currentPage * itemsPerPage
     );
 
-    // Metodo para copiar datos al portapapeles
     const handleCopy = (categoria) => {
-    const rowData = `Nombre: ${categoria.nombre} \nDescripción: ${categoria.descripcion}`;
-
-    navigator.clipboard
-        .writeText(rowData)
-        .catch((err) => {
+        const rowData = `Nombre: ${categoria.nombre} \nDescripción: ${categoria.descripcion}`;
+        navigator.clipboard.writeText(rowData).catch((err) => {
             console.error("Error al copiar al portapapeles:", err);
         });
-};
+    };
 
     return (
         <Container className="mt-5">
             <br />
             <h4>Gestión de Categorías</h4>
-            <Button className="mb-3" onClick={() => setShowModal(true)}>
-                Agregar categoría
-            </Button>
+
+            <Row className="mb-3">
+                <Col lg={3} md={4} sm={4} xs={5}>
+                    <Button onClick={() => setShowModal(true)} style={{ width: "100%" }}>
+                        Agregar categoría
+                    </Button>
+                </Col>
+                <Col lg={3} md={4} sm={4} xs={5}>
+                    <Button onClick={() => setShowChatModal(true)} style={{ width: "100%" }}>
+                        Chat IA
+                    </Button>
+                </Col>
+            </Row>
 
             <CuadroBusquedas
                 searchText={searchText}
@@ -273,6 +246,9 @@ const Categorias = () => {
                 setShowDeleteModal={setShowDeleteModal}
                 handleDeleteCategoria={handleDeleteCategoria}
             />
+
+            {/* Modal del ChatIA */}
+            <ChatIA showChatModal={showChatModal} setShowChatModal={setShowChatModal} />
         </Container>
     );
 };
