@@ -2,7 +2,13 @@ import React from "react";
 import { Table, Button, Image } from "react-bootstrap";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-const TablaProductos = ({ productos, openEditModal, openDeleteModal, handleCopy }) => {
+const TablaProductos = ({
+    productos,
+    openEditModal,
+    openDeleteModal,
+    handleCopy,
+    generarPDFDetalleProducto
+    }) => {
     return (
         <Table striped bordered hover responsive>
         <thead>
@@ -34,7 +40,7 @@ const TablaProductos = ({ productos, openEditModal, openDeleteModal, handleCopy 
                 >
                     <i className="bi bi-pencil"></i>
                 </Button>
-                
+
                 <Button
                     variant="outline-danger"
                     size="sm"
@@ -47,11 +53,19 @@ const TablaProductos = ({ productos, openEditModal, openDeleteModal, handleCopy 
                 <Button
                     variant="outline-info"
                     size="sm"
+                    className="me-2"
                     onClick={() => handleCopy(producto)}
                 >
                     <i className="bi bi-clipboard"></i>
                 </Button>
 
+                <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={() => generarPDFDetalleProducto(producto)}
+                >
+                    <i className="bi bi-filetype-pdf"></i>
+                </Button>
                 </td>
             </tr>
             ))}
