@@ -133,19 +133,20 @@ const Catalogo = () => {
                 </Col>
             </Row>
 
-            <Row>
+                <Row>
                 {productosPaginados.length > 0 ? (
                     productosPaginados.map((producto) => (
-                        <TarjetaProducto
-                            key={producto.id}
-                            producto={producto}
-                            openEditModal={openEditModal}
-                        />
+                    <TarjetaProducto
+                        key={producto.id}
+                        producto={producto}
+                        openEditModal={openEditModal}
+                    />
                     ))
                 ) : (
                     <p>No hay productos que coincidan con la búsqueda.</p>
                 )}
-            </Row>
+                </Row>
+
 
             <Paginacion
                 productosPorPagina={productosPorPagina}

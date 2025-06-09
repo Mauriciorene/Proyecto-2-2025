@@ -48,6 +48,7 @@ const TablaCategorias = ({ categorias, openEditModal, openDeleteModal, handleCop
             ))}
         </tbody>
         </Table>
+        
     );
 };
 
