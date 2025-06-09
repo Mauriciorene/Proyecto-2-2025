@@ -14,8 +14,6 @@ const Catalogo = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [productoEditado, setProductoEditado] = useState(null);
     const [searchText, setSearchText] = useState("");
-
-    // Estados de paginación
     const [paginaActual, setPaginaActual] = useState(1);
     const productosPorPagina = 6;
 
@@ -83,7 +81,6 @@ const Catalogo = () => {
         }
     };
 
-    // Filtrar productos por categoría y búsqueda
     const productosBusqueda = productos.filter((producto) => {
         const nombre = producto.nombre ? producto.nombre.toLowerCase() : "";
         const descripcion = producto.descripcion ? producto.descripcion.toLowerCase() : "";
@@ -95,12 +92,10 @@ const Catalogo = () => {
         return matchesCategoria && matchesBusqueda;
     });
 
-    // Reiniciar a página 1 si cambian búsqueda o categoría
     useEffect(() => {
         setPaginaActual(1);
     }, [searchText, categoriaSeleccionada]);
 
-    // Lógica de paginación
     const indiceUltimoProducto = paginaActual * productosPorPagina;
     const indicePrimerProducto = indiceUltimoProducto - productosPorPagina;
     const productosPaginados = productosBusqueda.slice(indicePrimerProducto, indiceUltimoProducto);
@@ -117,10 +112,8 @@ const Catalogo = () => {
         <Container className="mt-5">
             <h4>Catálogo de Productos</h4>
 
-            {/* Cuadro de búsqueda */}
             <CuadroBusquedas searchText={searchText} handleSearchChange={handleSearchChange} />
 
-            {/* Filtro por categoría */}
             <Row>
                 <Col lg={3} md={3} sm={6}>
                     <Form.Group className="mb-3">
@@ -140,18 +133,20 @@ const Catalogo = () => {
                 </Col>
             </Row>
 
-            {/* Productos paginados */}
             <Row>
                 {productosPaginados.length > 0 ? (
                     productosPaginados.map((producto) => (
-                        <TarjetaProducto key={producto.id} producto={producto} openEditModal={openEditModal} />
+                        <TarjetaProducto
+                            key={producto.id}
+                            producto={producto}
+                            openEditModal={openEditModal}
+                        />
                     ))
                 ) : (
                     <p>No hay productos que coincidan con la búsqueda.</p>
                 )}
             </Row>
 
-            {/* Componente de paginación */}
             <Paginacion
                 productosPorPagina={productosPorPagina}
                 totalProductos={productosBusqueda.length}
@@ -159,7 +154,6 @@ const Catalogo = () => {
                 cambiarPagina={cambiarPagina}
             />
 
-            {/* Modal de edición */}
             <ModalEdicionProducto
                 showEditModal={showEditModal}
                 setShowEditModal={setShowEditModal}
